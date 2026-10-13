@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>🧠 علّم واختبر الذكاء الاصطناعي</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', Tahoma, sans-serif; }
+
+  body {
+    min-height:100vh;
+    background:#f5f5f5;
+    color:#333;
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    padding:20px;
+  }
+
+  .box {
+    background:#fff;
+    border:1px solid #ddd;
+    border-radius:12px;
+    padding:30px;
+    max-width:780px;
+    width:100%;
+  }
+
+  h1 { text-align:center; font-size:1.5rem; margin-bottom:8px; color:#222; }
+  h2 { font-size:1.15rem; color:#222; margin-bottom:6px; }
+
+  .subtitle {
+    text-align:center;
+    color:#777;
+    font-size:0.9rem;
+    margin-bottom:20px;
+  }
+
+  .rule {
+    background:#eef2ff;
+    border:1px solid #c7d2fe;
+    color:#3730a3;
+    padding:12px 15px;
+    border-radius:8px;
+    font-size:0.9rem;
+    text-align:center;
+    margin-bottom:20px;
+    line-height:1.6;
+  }
+
+  /* ===== بطاقات التعليم ===== */
+  .cards { display:flex; flex-direction:column; gap:10px; margin-bottom:20px; }
+
+  .card {
+    display:grid;
+    grid-template-columns:90px 1fr auto auto;
+    align-items:center;
+    gap:12px;
+    background:#fafafa;
+    border:1px solid #eee;
+    border-radius:10px;
+    padding:14px 15px;
+    transition:all 0.3s;
+  }
+  .card.correct { border-color:#22c55e; background:#f0fdf4; }
+  .card.wrong { border-color:#ef4444; background:#fef2f2; }
+
+  .card .inputs {
+    font-size:1rem; font-weight:bold; color:#333;
+    font-family:monospace; text-align:center;
+  }
+  .card .prediction { font-size:0.9rem; color:#666; }
+  .card .prediction b { font-size:1.15rem; color:#4f46e5; }
+  .card .prediction .percent { color:#999; font-size:0.8rem; }
+
+  .btn-teach {
+    padding:7px 14px;
+    border-radius:6px;
+    font-size:0.85rem;
+    cursor:pointer;
+    transition:all 0.2s;
+    font-weight:bold;
+    background:#fff;
+  }
+  .btn-teach.zero { border:1px solid #64748b; color:#64748b; }
+  .btn-teach.zero:hover { background:#64748b; color:#fff; }
+  .btn-teach.one { border:1px solid #4f46e5; color:#4f46e5; }
+  .btn-teach.one:hover { background:#4f46e5; color:#fff; }
+
+  .stats {
+    display:flex; justify-content:space-around;
+    padding:12px; background:#fafafa;
+    border:1px solid #eee; border-radius:8px;
+    margin-bottom:12px; font-size:0.9rem; text-align:center;
+  }
+  .stats div { color:#666; }
+  .stats b { color:#222; font-size:1rem; display:block; margin-top:3px; }
+
+  .progress {
+    height:8px; background:#e5e7eb;
+    border-radius:4px; overflow:hidden; margin-bottom:15px;
+  }
+  .progress-fill {
+    height:100%; background:#4f46e5;
+    width:0%; transition:width 0.4s;
+  }
+
+  .status {
+    text-align:center; font-size:0.95rem; color:#666;
+    min-height:22px; padding:10px;
+    background:#fafafa; border-radius:8px; margin-bottom:20px;
+  }
+  .status.success { color:#16a34a; background:#f0fdf4; font-weight:bold; }
+
+  .btn-main {
+    width:100%; padding:10px; border-radius:8px;
+    font-size:0.95rem; cursor:pointer; font-weight:bold;
+    transition:all 0.2s; border:1px solid #e5e7eb;
+    background:#f3f4f6; color:#666; margin-bottom:20px;
+  }
+  .btn-main:hover { background:#e5e7eb; }
+
+  /* ===== قسم الاختبار ===== */
+  .divider {
+    border-top:2px dashed #e5e7eb;
+    margin:30px 0;
+    position:relative;
+  }
+  .divider::after {
+    content:'🧪';
+    position:absolute; top:-14px; left:50%;
+    transform:translateX(-50%);
+    background:#fff; padding:0 10px; font-size:1.2rem;
+  }
+
+  /* شريط المستوى */
+  .level-bar {
+    display:flex; gap:6px; margin-bottom:20px;
+    background:#fafafa; padding:8px;
+    border-radius:10px; border:1px solid #eee;
+  }
+  .level-dot {
+    flex:1; text-align:center;
+    padding:8px 4px; border-radius:6px;
+    font-size:0.75rem; color:#999;
+    transition:all 0.4s;
+    border:1px solid transparent;
+  }
+  .level-dot .emoji { font-size:1.1rem; display:block; margin-bottom:2px; }
+  .level-dot.reached { color:#4f46e5; background:#eef2ff; }
+  .level-dot.current {
+    color:#fff; background:#4f46e5;
+    border-color:#4f46e5;
+    font-weight:bold;
+    box-shadow:0 0 12px rgba(79,70,229,0.4);
+  }
+
+  .level-header { text-align:center; margin-bottom:15px; }
+  .level-header .level-emoji {
+    font-size:2rem; margin-bottom:6px; display:block;
+  }
+  .level-header h2 {
+    background:linear-gradient(90deg,#4f46e5,#7c3aed);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+    font-size:1.3rem;
+  }
+  .level-header p {
+    color:#777; font-size:0.85rem; margin-top:4px;
+  }
+
+  /* تقدم المستوى */
+  .level-progress {
+    display:flex; align-items:center; gap:10px;
+    margin-bottom:18px;
+  }
+  .level-progress .progress { flex:1; margin:0; }
+  .level-progress .count {
+    font-size:0.85rem; color:#555;
+    font-family:monospace; white-space:nowrap;
+    font-weight:bold;
+  }
+
+  /* بطاقة السؤال */
+  .question-card {
+    background:#fafafa;
+    border:2px solid #e5e7eb;
+    border-radius:12px;
+    padding:20px;
+    text-align:center;
+    margin-bottom:15px;
+    transition:all 0.3s;
+  }
+  .question-card.correct {
+    border-color:#22c55e; background:#f0fdf4;
+  }
+  .question-card.wrong {
+    border-color:#ef4444; background:#fef2f2;
+  }
+
+  .question-inputs {
+    display:flex; justify-content:center; gap:30px;
+    margin-bottom:15px;
+  }
+  .question-inputs .val {
+    font-family:monospace; font-size:1rem; color:#555;
+  }
+  .question-inputs .val b {
+    display:block; font-size:1.5rem;
+    color:#4f46e5; margin-top:4px;
+  }
+
+  .ai-answer {
+    font-size:0.95rem; color:#666;
+    margin-bottom:10px;
+  }
+  .ai-answer b {
+    font-size:1.6rem; color:#4f46e5;
+    font-family:monospace;
+  }
+  .ai-answer .percent {
+    color:#999; font-size:0.8rem;
+  }
+
+  .verdict {
+    display:inline-block;
+    padding:6px 16px;
+    border-radius:6px;
+    font-size:0.9rem;
+    font-weight:bold;
+  }
+  .verdict.correct { background:#dcfce7; color:#166534; }
+  .verdict.wrong { background:#fee2e2; color:#991b1b; }
+  .verdict.neutral { background:#f3f4f6; color:#666; }
+
+  .btn-next {
+    width:100%;
+    padding:12px;
+    border-radius:8px;
+    border:none;
+    background:#4f46e5;
+    color:#fff;
+    font-size:0.95rem;
+    font-weight:bold;
+    cursor:pointer;
+    transition:all 0.2s;
+  }
+  .btn-next:hover { background:#4338ca; }
+  .btn-next:disabled {
+    background:#e5e7eb; color:#999;
+    cursor:not-allowed;
+  }
+
+  /* احتفال بالترقية */
+  .levelup-overlay {
+    position:fixed; inset:0;
+    background:rgba(0,0,0,0.5);
+    display:flex; justify-content:center; align-items:center;
+    z-index:100; opacity:0; pointer-events:none;
+    transition:opacity 0.3s;
+  }
+  .levelup-overlay.show { opacity:1; pointer-events:auto; }
+
+  .levelup-card {
+    background:#fff;
+    padding:40px 60px;
+    border-radius:16px;
+    text-align:center;
+    transform:scale(0.7);
+    transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .levelup-overlay.show .levelup-card { transform:scale(1); }
+
+  .levelup-card .big-emoji {
+    font-size:4rem; display:block; margin-bottom:15px;
+    animation:bounce 0.6s infinite alternate;
+  }
+  @keyframes bounce {
+    from { transform:translateY(0); }
+    to { transform:translateY(-10px); }
+  }
+  .levelup-card h3 {
+    color:#4f46e5; font-size:1.5rem;
+    margin-bottom:8px;
+  }
+  .levelup-card p { color:#666; font-size:0.95rem; }
+
+  @media (max-width:600px) {
+    .box { padding:20px; }
+    h1 { font-size:1.2rem; }
+    .card { grid-template-columns:1fr; text-align:center; gap:8px; }
+    .stats { flex-direction:column; gap:8px; }
+    .level-dot { font-size:0.65rem; }
+    .question-inputs { gap:15px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="box">
+  <h1>🧠 علّم الذكاء الاصطناعي بنفسك</h1>
+  <p class="subtitle">كلما زاد ذكاؤه، زادت صعوبة الاختبار تلقائيًا</p>
+
+  <div class="rule">
+    📖 <b>القاعدة الصحيحة (XOR):</b> الناتج <b>1</b> إذا كان المدخلان <b>مختلفين</b>، وإلا فالناتج <b>0</b>
+  </div>
+
+  <!-- ===== قسم التعليم ===== -->
+  <h2>📚 1) علّمه</h2>
+  <p style="color:#777;font-size:0.85rem;margin-bottom:15px;">
+    اضغط على الأزرار لتعليمه الإجابة الصحيحة لكل حالة
+  </p>
+
+  <button class="btn-main" onclick="reset()">🔄 أنسِ الشبكة كل شيء</button>
+
+  <div class="cards" id="cards"></div>
+
+  <div class="stats">
+    <div>عدد التعليمات <b id="teachCount">0</b></div>
+    <div>الدقة الحالية <b id="accuracy">—</b></div>
+    <div>المستوى العام <b id="mood">فارغ</b></div>
+  </div>
+
+  <div class="progress"><div class="progress-fill" id="progressBar"></div></div>
+
+  <div class="status" id="status">علّم الشبكة أولًا، ثم اختبرها في القسم التالي</div>
+
+  <!-- ===== الفاصل ===== -->
+  <div class="divider"></div>
+
+  <!-- ===== قسم الاختبار ===== -->
+  <h2>🧪 2) اختبره — الصعوبة ترتفع مع ذكائه</h2>
+  <p style="color:#777;font-size:0.85rem;margin-bottom:15px;">
+    كل 5 إجابات صحيحة في المستوى الحالي ترقّيه للمستوى التالي تلقائيًا
+  </p>
+
+  <!-- شريط المستويات -->
+  <div class="level-bar" id="levelBar"></div>
+
+  <div class="level-header">
+    <span class="level-emoji" id="levelEmoji">🌱</span>
+    <h2 id="levelName">المستوى 1: مبتدئ</h2>
+    <p id="levelDesc">أرقام صحيحة 0 و 1</p>
+  </div>
+
+  <div class="level-progress">
+    <div class="progress"><div class="progress-fill" id="levelProgressFill"></div></div>
+    <span class="count" id="levelCount">0 / 5</span>
+  </div>
+
+  <div class="question-card" id="questionCard">
+    <div class="question-inputs">
+      <div class="val">x₁ <b id="qx1">—</b></div>
+      <div class="val">x₂ <b id="qx2">—</b></div>
+    </div>
+    <div class="ai-answer">
+      توقع الذكاء: <b id="qPred">—</b>
+      <span class="percent" id="qConf"></span>
+    </div>
+    <div id="verdictBox"></div>
+  </div>
+
+  <button class="btn-next" id="nextBtn" onclick="handleNext()">
+    اكشف الإجابة
+  </button>
+</div>
+
+<!-- احتفال الترقية -->
+<div class="levelup-overlay" id="levelupOverlay">
+  <div class="levelup-card">
+    <span class="big-emoji" id="levelupEmoji">🎉</span>
+    <h3 id="levelupTitle">ترقية!</h3>
+    <p id="levelupDesc">انتقلت للمستوى التالي</p>
+  </div>
+</div>
+
+<script>
+// ================= الشبكة العصبية =================
+const X = [[0,0],[0,1],[1,0],[1,1]];
+const Y = [0,1,1,0];
+
+let w1, b1, w2, b2;
+let teachCount = 0;
+
+const sigmoid = x => 1 / (1 + Math.exp(-x));
+const sigmoid_deriv = x => x * (1 - x);
+const rand = () => Math.random() * 2 - 1;
+
+function initNetwork() {
+  w1 = [[rand(),rand()],[rand(),rand()]];
+  b1 = [rand(), rand()];
+  w2 = [rand(), rand()];
+  b2 = rand();
+  teachCount = 0;
+}
+
+function forward(x) {
+  const h0 = sigmoid(w1[0][0]*x[0] + w1[0][1]*x[1] + b1[0]);
+  const h1 = sigmoid(w1[1][0]*x[0] + w1[1][1]*x[1] + b1[1]);
+  return sigmoid(w2[0]*h0 + w2[1]*h1 + b2);
+}
+
+function teachOne(x, y, lr = 0.8) {
+  const h0 = sigmoid(w1[0][0]*x[0] + w1[0][1]*x[1] + b1[0]);
+  const h1 = sigmoid(w1[1][0]*x[0] + w1[1][1]*x[1] + b1[1]);
+  const output = sigmoid(w2[0]*h0 + w2[1]*h1 + b2);
+
+  const error = y - output;
+  const d_out = error * sigmoid_deriv(output);
+  const d_hid = [
+    d_out * w2[0] * sigmoid_deriv(h0),
+    d_out * w2[1] * sigmoid_deriv(h1)
+  ];
+
+  w2[0] += lr * d_out * h0;
+  w2[1] += lr * d_out * h1;
+  b2    += lr * d_out;
+  for (let j=0; j<2; j++) {
+    for (let i=0; i<2; i++) w1[j][i] += lr * d_hid[j] * x[i];
+    b1[j] += lr * d_hid[j];
+  }
+}
+
+// ================= المستويات =================
+const LEVELS = [
+  {
+    name: 'مبتدئ',
+    emoji: '🌱',
+    desc: 'أرقام صحيحة 0 و 1 فقط',
+    generate: () => [
+      Math.random() < 0.5 ? 0 : 1,
+      Math.random() < 0.5 ? 0 : 1
+    ],
+    expected: (x) => (x[0] !== x[1]) ? 1 : 0
+  },
+  {
+    name: 'يتعلم',
+    emoji: '📖',
+    desc: 'قيم قريبة من 0 و 1 (±0.1)',
+    generate: () => {
+      const r = () => {
+        const b = Math.random() < 0.5 ? 0 : 1;
+        const off = Math.random() * 0.1;
+        return b === 0 ? +off.toFixed(2) : +(1 - off).toFixed(2);
+      };
+      return [r(), r()];
+    },
+    expected: (x) => {
+      const b1 = x[0] > 0.5 ? 1 : 0;
+      const b2 = x[1] > 0.5 ? 1 : 0;
+      return (b1 !== b2) ? 1 : 0;
+    }
+  },
+  {
+    name: 'متوسط',
+    emoji: '⚡',
+    desc: 'قيم متنوعة بين 0 و 1',
+    generate: () => {
+      const r = () => +(0.15 + Math.random() * 0.7).toFixed(2);
+      return [r(), r()];
+    },
+    expected: (x) => {
+      const b1 = x[0] > 0.5 ? 1 : 0;
+      const b2 = x[1] > 0.5 ? 1 : 0;
+      return (b1 !== b2) ? 1 : 0;
+    }
+  },
+  {
+    name: 'جيد',
+    emoji: '🔥',
+    desc: 'قيم قريبة من المنتصف (تحدٍّ حقيقي)',
+    generate: () => {
+      const r = () => +(0.35 + Math.random() * 0.3).toFixed(2);
+      return [r(), r()];
+    },
+    expected: (x) => {
+      const b1 = x[0] > 0.5 ? 1 : 0;
+      const b2 = x[1] > 0.5 ? 1 : 0;
+      return (b1 !== b2) ? 1 : 0;
+    }
+  },
+  {
+    name: 'خبير',
+    emoji: '👑',
+    desc: 'قيم عشوائية كاملة — أعلى تحدٍّ',
+    generate: () => [
+      +Math.random().toFixed(2),
+      +Math.random().toFixed(2)
+    ],
+    expected: (x) => {
+      const b1 = x[0] > 0.5 ? 1 : 0;
+      const b2 = x[1] > 0.5 ? 1 : 0;
+      return (b1 !== b2) ? 1 : 0;
+    }
+  }
+];
+
+const QUESTIONS_TO_PASS = 5;
+
+let currentLevel = 0;
+let levelScore = 0;
+let currentQuestion = null;
+let currentPrediction = null;
+let answered = false;
+
+// ================= الواجهة =================
+const $ = id => document.getElementById(id);
+
+function renderCards() {
+  const container = $('cards');
+  container.innerHTML = '';
+  X.forEach((x, i) => {
+    const output = forward(x);
+    const pred = output > 0.5 ? 1 : 0;
+    const isCorrect = pred === Y[i];
+    const cls = teachCount > 0 ? (isCorrect ? 'correct' : 'wrong') : '';
+    container.innerHTML += `
+      <div class="card ${cls}">
+        <div class="inputs">${x[0]} ⊕ ${x[1]}</div>
+        <div class="prediction">
+          توقع: <b>${pred}</b>
+          <span class="percent">(${Math.round(output*100)}%)</span>
+        </div>
+        <button class="btn-teach zero" onclick="teach(${i},0)">علّمه: 0</button>
+        <button class="btn-teach one" onclick="teach(${i},1)">علّمه: 1</button>
+      </div>
+    `;
+  });
+}
+
+function updateStats() {
+  let correct = 0;
+  X.forEach((x,i) => {
+    const pred = forward(x) > 0.5 ? 1 : 0;
+    if (pred === Y[i]) correct++;
+  });
+  const acc = Math.round(correct / 4 * 100);
+  $('accuracy').textContent = acc + '%';
+  $('teachCount').textContent = teachCount;
+  $('progressBar').style.width = acc + '%';
+
+  let mood = 'فارغ';
+  if (teachCount === 0) mood = 'فارغ تمامًا';
+  else if (acc <= 25) mood = 'مبتدئ';
+  else if (acc <= 50) mood = 'يتعلم';
+  else if (acc <= 75) mood = 'متوسط';
+  else if (acc === 100) mood = 'ذكي ✨';
+  $('mood').textContent = mood;
+
+  if (acc === 100 && teachCount > 0) {
+    $('status').innerHTML = '🎉 ممتاز! الشبكة تعلمت. جرّب اختبارها في الأسفل';
+    $('status').className = 'status success';
+  } else {
+    $('status').innerHTML = `استمر في التعليم — ${teachCount} تعليمة حتى الآن`;
+    $('status').className = 'status';
+  }
+}
+
+function teach(i, answer) {
+  teachOne(X[i], answer, 0.8);
+  teachCount++;
+  renderCards();
+  updateStats();
+  // أعد توليد السؤال لأن الشبكة تغيرت
+  newQuestion();
+}
+
+function reset() {
+  initNetwork();
+  currentLevel = 0;
+  levelScore = 0;
+  renderCards();
+  updateStats();
+  renderLevelBar();
+  newQuestion();
+  $('status').innerHTML = 'أُنسيت الشبكة كل شيء — ابدأ التعليم من جديد';
+  $('status').className = 'status';
+}
+
+// ================= قسم الاختبار =================
+function renderLevelBar() {
+  const bar = $('levelBar');
+  bar.innerHTML = '';
+  LEVELS.forEach((lvl, i) => {
+    let cls = '';
+    if (i < currentLevel) cls = 'reached';
+    if (i === currentLevel) cls = 'current';
+    bar.innerHTML += `
+      <div class="level-dot ${cls}">
+        <span class="emoji">${lvl.emoji}</span>
+        ${lvl.name}
+      </div>
+    `;
+  });
+}
+
+function updateLevelUI() {
+  const lvl = LEVELS[currentLevel];
+  $('levelEmoji').textContent = lvl.emoji;
+  $('levelName').textContent = `المستوى ${currentLevel + 1}: ${lvl.name}`;
+  $('levelDesc').textContent = lvl.desc;
+
+  const pct = (levelScore / QUESTIONS_TO_PASS) * 100;
+  $('levelProgressFill').style.width = pct + '%';
+  $('levelCount').textContent = `${levelScore} / ${QUESTIONS_TO_PASS}`;
+  renderLevelBar();
+}
+
+function newQuestion() {
+  const lvl = LEVELS[currentLevel];
+  currentQuestion = lvl.generate();
+  currentPrediction = null;
+  answered = false;
+
+  $('qx1').textContent = currentQuestion[0].toFixed(2).replace(/\.00$/, '');
+  $('qx2').textContent = currentQuestion[1].toFixed(2).replace(/\.00$/, '');
+  $('qPred').textContent = '?';
+  $('qConf').textContent = '';
+  $('verdictBox').innerHTML = '';
+  $('questionCard').className = 'question-card';
+  $('nextBtn').textContent = 'اكشف الإجابة';
+  $('nextBtn').disabled = false;
+
+  updateLevelUI();
+}
+
+function revealAnswer() {
+  const lvl = LEVELS[currentLevel];
+  const output = forward(currentQuestion);
+  const pred = output > 0.5 ? 1 : 0;
+  const expected = lvl.expected(currentQuestion);
+  const isCorrect = pred === expected;
+  const confidence = Math.round(output * 100);
+  const confDisplay = pred === 1 ? confidence : 100 - confidence;
+
+  currentPrediction = pred;
+  answered = true;
+
+  $('qPred').textContent = pred;
+  $('qConf').textContent = `(ثقة ${confDisplay}%)`;
+
+  if (isCorrect) {
+    $('questionCard').className = 'question-card correct';
+    $('verdictBox').innerHTML = '<span class="verdict correct">✓ الذكاء أجاب بشكل صحيح</span>';
+    levelScore++;
+  } else {
+    $('questionCard').className = 'question-card wrong';
+    $('verdictBox').innerHTML = `<span class="verdict wrong">✗ خطأ — الصحيح هو ${expected}</span>`;
+  }
+
+  $('nextBtn').textContent = isCorrect ? 'سؤال جديد ▶' : 'حاول مرة أخرى ▶';
+  updateLevelUI();
+
+  // فحص الترقية
+  if (levelScore >= QUESTIONS_TO_PASS && currentLevel < LEVELS.length - 1) {
+    $('nextBtn').disabled = true;
+    setTimeout(levelUp, 900);
+  } else if (levelScore >= QUESTIONS_TO_PASS && currentLevel === LEVELS.length - 1) {
+    $('nextBtn').disabled = true;
+    $('nextBtn').textContent = '👑 وصلت لأعلى مستوى!';
+  }
+}
+
+function levelUp() {
+  currentLevel++;
+  levelScore = 0;
+
+  const lvl = LEVELS[currentLevel];
+  $('levelupEmoji').textContent = lvl.emoji;
+  $('levelupTitle').textContent = `🎉 ترقية للمستوى ${currentLevel + 1}!`;
+  $('levelupDesc').textContent = `${lvl.name} — ${lvl.desc}`;
+  $('levelupOverlay').classList.add('show');
+
+  setTimeout(() => {
+    $('levelupOverlay').classList.remove('show');
+    newQuestion();
+  }, 1800);
+}
+
+function handleNext() {
+  if (!answered) {
+    revealAnswer();
+  } else {
+    // إذا فشل، أعد نفس السؤال. إذا نجح، سؤال جديد.
+    const lvl = LEVELS[currentLevel];
+    const expected = lvl.expected(currentQuestion);
+    if (currentPrediction === expected) {
+      newQuestion();
+    } else {
+      // نفس السؤال لإعادة المحاولة
+      answered = false;
+      currentPrediction = null;
+      $('qPred').textContent = '?';
+      $('qConf').textContent = '';
+      $('verdictBox').innerHTML = '';
+      $('questionCard').className = 'question-card';
+      $('nextBtn').textContent = 'اكشف الإجابة';
+    }
+  }
+}
+
+// ================= الإطلاق =================
+window.addEventListener('load', () => {
+  initNetwork();
+  renderCards();
+  updateStats();
+  renderLevelBar();
+  newQuestion();
+});
+</script>
+
+</body>
+</html>
